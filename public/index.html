@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Content Bucket Framework Bot</title>
+  <meta name="description" content="AI-powered content bucket framework generator. Create a complete social media content strategy in minutes." />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+<div class="app">
+
+  <!-- ═══ Header ═══ -->
+  <header class="app-header">
+    <div class="app-logo">
+      <div class="app-logo-icon">⚡</div>
+      <h1 class="app-title">Content Bucket Bot</h1>
+    </div>
+    <p class="app-subtitle">AI-powered content strategy in one session</p>
+  </header>
+
+  <!-- ═══ Steps Bar ═══ -->
+  <nav class="steps-bar" id="steps-bar">
+    <div class="step-item active" data-step="1">
+      <div class="step-node"><span class="step-num">1</span> Brand</div>
+    </div>
+    <div class="step-connector"></div>
+    <div class="step-item" data-step="2">
+      <div class="step-node"><span class="step-num">2</span> Research</div>
+    </div>
+    <div class="step-connector"></div>
+    <div class="step-item" data-step="3">
+      <div class="step-node"><span class="step-num">3</span> Persona</div>
+    </div>
+    <div class="step-connector"></div>
+    <div class="step-item" data-step="4">
+      <div class="step-node"><span class="step-num">4</span> Content</div>
+    </div>
+  </nav>
+
+  <!-- ═══ STEP 1: Brand Input ═══ -->
+  <section id="step-1" class="step-content active">
+    <div class="card">
+      <div class="card-title">Tell us about the brand</div>
+
+      <div class="form-group">
+        <label class="form-label" for="brand-name">Brand Name</label>
+        <input class="form-input" type="text" id="brand-name" placeholder="e.g. FreshBrew Coffee, NovaSkin, TechAcademy" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="brand-desc">What does this brand do? (one line)</label>
+        <textarea class="form-textarea" id="brand-desc" rows="2" placeholder="e.g. Premium organic coffee subscription delivering single-origin beans to your door every month"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Platforms</label>
+        <div class="checkbox-group">
+          <div class="checkbox-pill">
+            <input type="checkbox" id="p-instagram" value="Instagram" checked />
+            <label for="p-instagram"><span class="pill-icon">📸</span> Instagram</label>
+          </div>
+          <div class="checkbox-pill">
+            <input type="checkbox" id="p-facebook" value="Facebook" />
+            <label for="p-facebook"><span class="pill-icon">📘</span> Facebook</label>
+          </div>
+          <div class="checkbox-pill">
+            <input type="checkbox" id="p-youtube" value="YouTube" />
+            <label for="p-youtube"><span class="pill-icon">▶️</span> YouTube</label>
+          </div>
+          <div class="checkbox-pill">
+            <input type="checkbox" id="p-linkedin" value="LinkedIn" />
+            <label for="p-linkedin"><span class="pill-icon">💼</span> LinkedIn</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="objective">Campaign Objective</label>
+        <select class="form-select" id="objective">
+          <option value="awareness">Brand Awareness — make them discover you</option>
+          <option value="leads">Lead Generation — drive sign-ups & inquiries</option>
+          <option value="sales">Sales & Conversions — drive purchases</option>
+          <option value="community">Community Building — build an engaged following</option>
+          <option value="thought_leadership">Thought Leadership — own the narrative</option>
+        </select>
+      </div>
+
+      <button class="btn btn-primary btn-full mt-2" id="btn-start" onclick="startResearch()">
+        Generate Strategy →
+      </button>
+
+      <div id="error-1"></div>
+    </div>
+  </section>
+
+  <!-- ═══ STEP 2: Research ═══ -->
+  <section id="step-2" class="step-content">
+    <!-- Loading state -->
+    <div id="research-loading" class="loading-container">
+      <div class="loading-spinner"></div>
+      <div class="loading-label">Researching the brand...</div>
+      <div class="loading-sublabel">Analyzing audience, competitors, and content angles</div>
+      <div class="progress-track"><div class="progress-fill" id="progress-research"></div></div>
+    </div>
+    <!-- Results state -->
+    <div id="research-results" class="hidden">
+      <div class="card">
+        <div class="card-title mb-1">Brand Research Summary</div>
+        <p class="text-muted mb-2" style="font-size: 0.8rem;">Review and edit the AI-generated research below. Feel free to add any specific details before proceeding.</p>
+        <div class="research-grid" id="research-grid"></div>
+      </div>
+      <div class="action-row">
+        <button class="btn btn-secondary" onclick="goToStep(1)">← Back</button>
+        <button class="btn btn-primary" onclick="generatePersonas()">Continue — Pick a Persona →</button>
+      </div>
+    </div>
+    <div id="error-2"></div>
+  </section>
+
+  <!-- ═══ STEP 3: Personas ═══ -->
+  <section id="step-3" class="step-content">
+    <!-- Loading state -->
+    <div id="persona-loading" class="loading-container hidden">
+      <div class="loading-spinner"></div>
+      <div class="loading-label">Building audience personas...</div>
+      <div class="loading-sublabel">Creating 3 distinct audience profiles based on research</div>
+    </div>
+    <!-- Results state -->
+    <div id="persona-results" class="hidden">
+      <div class="card" style="border: none; background: none; padding: 0;">
+        <div class="card-title mb-1">Who are we writing for?</div>
+        <p class="text-muted mb-2" style="font-size: 0.8rem;">Select one or more personas. All content will be tailored to these specific audiences.</p>
+        <div class="mb-2">
+          <button class="btn btn-secondary" style="padding: 0.25rem 0.75rem; font-size: 0.8rem;" onclick="selectAllPersonas()">Select All</button>
+        </div>
+        <div class="personas-grid" id="personas-grid"></div>
+        <div class="custom-persona-section mt-2">
+          <button class="btn btn-ghost" id="btn-show-custom-persona" onclick="toggleCustomPersonaForm()">+ Add Custom Persona</button>
+          <div id="custom-persona-form" class="card mt-1 hidden" style="border: 1px dashed rgba(255,255,255,0.2);">
+            <div class="form-group">
+              <label class="form-label" for="custom-persona-name">Persona Name</label>
+              <input class="form-input" type="text" id="custom-persona-name" placeholder="e.g. Gen Z College Students" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="custom-persona-who">Who are they?</label>
+              <textarea class="form-textarea" id="custom-persona-who" rows="2" placeholder="e.g. 18-24 year olds looking for affordable hangout spots"></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="custom-persona-frustration">Main Frustration (optional)</label>
+              <input class="form-input" type="text" id="custom-persona-frustration" placeholder="e.g. Premium cafes are too expensive" />
+            </div>
+            <button class="btn btn-primary" style="padding: 0.25rem 0.75rem; font-size: 0.8rem;" onclick="addCustomPersona()">Add to Selection</button>
+          </div>
+        </div>
+      </div>
+      <div class="action-row">
+        <button class="btn btn-secondary" onclick="goToStep(2)">← Back</button>
+        <button class="btn btn-primary" id="btn-generate-content" onclick="generateContent()" disabled>Generate Content for Selected Personas →</button>
+      </div>
+    </div>
+    <div id="error-3"></div>
+  </section>
+
+  <!-- ═══ STEP 4: Results ═══ -->
+  <section id="step-4" class="step-content">
+    <!-- Loading state -->
+    <div id="content-loading" class="loading-container hidden">
+      <div class="loading-spinner"></div>
+      <div class="loading-label" id="content-loading-label">Generating content buckets...</div>
+      <div class="loading-sublabel" id="content-loading-sub">This may take a minute</div>
+      <div class="progress-track"><div class="progress-fill" id="progress-content"></div></div>
+    </div>
+    <!-- Results state -->
+    <div id="content-results" class="hidden">
+      <div class="summary-bar" id="summary-bar"></div>
+      <div id="buckets-container"></div>
+      <div class="action-row">
+        <button class="btn btn-secondary" onclick="resetAll()">⟳ Start Over</button>
+      </div>
+    </div>
+    <div id="error-4"></div>
+  </section>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+// State
+// ═══════════════════════════════════════════════════════════════════════════
+const BACKEND = window.location.origin;
+const BUCKET_COLORS = ["#818cf8", "#34d399", "#f59e0b", "#f472b6", "#38bdf8", "#a78bfa", "#fb923c"];
+
+let state = {
+  brand: "",
+  description: "",
+  platforms: [],
+  objective: "",
+  research: null,
+  personas: [],
+  selectedPersonas: [],
+  buckets: [],
+  posts: {},  // { bucketIndex: { platform: [posts] } }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Step Navigation
+// ═══════════════════════════════════════════════════════════════════════════
+function goToStep(num) {
+  // Hide all step contents
+  document.querySelectorAll(".step-content").forEach((s) => s.classList.remove("active"));
+  document.getElementById(`step-${num}`).classList.add("active");
+
+  // Update step bar
+  document.querySelectorAll(".step-item").forEach((item) => {
+    const s = parseInt(item.dataset.step);
+    item.classList.remove("active", "completed");
+    if (s < num) item.classList.add("completed");
+    if (s === num) item.classList.add("active");
+  });
+
+  // Update connectors
+  const connectors = document.querySelectorAll(".step-connector");
+  connectors.forEach((c, i) => {
+    c.classList.toggle("done", i < num - 1);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Helpers
+// ═══════════════════════════════════════════════════════════════════════════
+function esc(s) {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function showError(stepNum, msg) {
+  const el = document.getElementById(`error-${stepNum}`);
+  el.innerHTML = `<div class="error-box"><span class="error-icon">⚠️</span> ${esc(msg)}</div>`;
+}
+
+function clearErrors() {
+  [1, 2, 3, 4].forEach((n) => {
+    document.getElementById(`error-${n}`).innerHTML = "";
+  });
+}
+
+function getSelectedPlatforms() {
+  const boxes = document.querySelectorAll('.checkbox-pill input[type="checkbox"]:checked');
+  return Array.from(boxes).map((b) => b.value);
+}
+
+async function apiCall(endpoint, body) {
+  const resp = await fetch(`${BACKEND}${endpoint}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const data = await resp.json();
+  if (!data.success) throw new Error(data.error || "Unknown error");
+  return data;
+}
+
+function setProgress(id, pct) {
+  document.getElementById(id).style.width = pct + "%";
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// STEP 1 → 2: Research
+// ═══════════════════════════════════════════════════════════════════════════
+async function startResearch() {
+  clearErrors();
+
+  const brand = document.getElementById("brand-name").value.trim();
+  const description = document.getElementById("brand-desc").value.trim();
+  const platforms = getSelectedPlatforms();
+  const objective = document.getElementById("objective").value;
+
+  // Validate
+  if (!brand) {
+    document.getElementById("brand-name").focus();
+    return showError(1, "Enter a brand name");
+  }
+  if (!description) {
+    document.getElementById("brand-desc").focus();
+    return showError(1, "Describe what this brand does");
+  }
+  if (platforms.length === 0) {
+    return showError(1, "Select at least one platform");
+  }
+
+  // Save state
+  state.brand = brand;
+  state.description = description;
+  state.platforms = platforms;
+  state.objective = objective;
+
+  // Move to step 2
+  goToStep(2);
+  document.getElementById("research-loading").classList.remove("hidden");
+  document.getElementById("research-results").classList.add("hidden");
+
+  // Animate progress
+  setProgress("progress-research", 20);
+  const progressInterval = setInterval(() => {
+    const el = document.getElementById("progress-research");
+    const current = parseFloat(el.style.width) || 20;
+    if (current < 85) setProgress("progress-research", current + Math.random() * 8);
+  }, 800);
+
+  try {
+    const data = await apiCall("/api/research", {
+      brand,
+      description,
+      platforms,
+      objective,
+    });
+
+    clearInterval(progressInterval);
+    setProgress("progress-research", 100);
+
+    state.research = data.research;
+
+    // Render research
+    setTimeout(() => renderResearch(data.research), 300);
+  } catch (err) {
+    clearInterval(progressInterval);
+    document.getElementById("research-loading").classList.add("hidden");
+    showError(2, err.message);
+  }
+}
+
+function renderResearch(r) {
+  document.getElementById("research-loading").classList.add("hidden");
+  document.getElementById("research-results").classList.remove("hidden");
+
+  const grid = document.getElementById("research-grid");
+  const toText = (val) => Array.isArray(val) ? val.join('\n') : (val || "");
+
+  grid.innerHTML = `
+    <div class="research-item">
+      <div class="research-item-label">Industry</div>
+      <input type="text" class="form-input" id="res-industry" value="${esc(toText(r.industry))}" />
+    </div>
+    <div class="research-item">
+      <div class="research-item-label">Stage</div>
+      <input type="text" class="form-input" id="res-product_stage" value="${esc(toText(r.product_stage))}" />
+    </div>
+    <div class="research-item" style="grid-column: 1 / -1;">
+      <div class="research-item-label">Audience</div>
+      <textarea class="form-textarea" id="res-audience_summary" rows="2">${esc(toText(r.audience_summary))}</textarea>
+    </div>
+    <div class="research-item" style="grid-column: 1 / -1;">
+      <div class="research-item-label">Pain Points (One per line)</div>
+      <textarea class="form-textarea" id="res-core_pain_points" rows="3">${esc(toText(r.core_pain_points))}</textarea>
+    </div>
+    <div class="research-item" style="grid-column: 1 / -1;">
+      <div class="research-item-label">Competitive Landscape</div>
+      <textarea class="form-textarea" id="res-competitive_landscape" rows="2">${esc(toText(r.competitive_landscape))}</textarea>
+    </div>
+    <div class="research-item" style="grid-column: 1 / -1;">
+      <div class="research-item-label">Key Differentiators (One per line)</div>
+      <textarea class="form-textarea" id="res-key_differentiators" rows="3">${esc(toText(r.key_differentiators))}</textarea>
+    </div>
+    <div class="research-item" style="grid-column: 1 / -1;">
+      <div class="research-item-label">Content Angles (One per line)</div>
+      <textarea class="form-textarea" id="res-content_angles" rows="3">${esc(toText(r.content_angles))}</textarea>
+    </div>
+    <div class="research-item" style="grid-column: 1 / -1;">
+      <div class="research-item-label">What to Avoid</div>
+      <textarea class="form-textarea" id="res-what_to_avoid" rows="2">${esc(toText(r.what_to_avoid))}</textarea>
+    </div>
+    <div class="research-item" style="grid-column: 1 / -1;">
+      <div class="research-item-label">Suggested Voice</div>
+      <textarea class="form-textarea" id="res-brand_voice_suggestion" rows="2">${esc(toText(r.brand_voice_suggestion))}</textarea>
+    </div>
+    <div class="research-item" style="grid-column: 1 / -1;">
+      <div class="research-item-label">Tonality</div>
+      <input type="text" class="form-input" id="res-tonality" value="${esc(toText(r.tonality))}" placeholder="e.g. Witty, Bold, Empathetic" />
+    </div>
+    <div class="research-item" style="grid-column: 1 / -1;">
+      <div class="research-item-label">Objective Insight</div>
+      <textarea class="form-textarea" id="res-objective_insight" rows="2">${esc(toText(r.objective_insight))}</textarea>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// STEP 2 → 3: Personas
+// ═══════════════════════════════════════════════════════════════════════════
+async function generatePersonas() {
+  clearErrors();
+
+  // Scrape user edits from the research tab
+  state.research = {
+    industry: document.getElementById('res-industry').value.trim(),
+    product_stage: document.getElementById('res-product_stage').value.trim(),
+    audience_summary: document.getElementById('res-audience_summary').value.trim(),
+    core_pain_points: document.getElementById('res-core_pain_points').value.split('\\n').filter(s => s.trim()),
+    competitive_landscape: document.getElementById('res-competitive_landscape').value.trim(),
+    key_differentiators: document.getElementById('res-key_differentiators').value.split('\\n').filter(s => s.trim()),
+    content_angles: document.getElementById('res-content_angles').value.split('\\n').filter(s => s.trim()),
+    what_to_avoid: document.getElementById('res-what_to_avoid').value.trim(),
+    brand_voice_suggestion: document.getElementById('res-brand_voice_suggestion').value.trim(),
+    tonality: document.getElementById('res-tonality').value.trim(),
+    objective_insight: document.getElementById('res-objective_insight').value.trim(),
+  };
+
+  goToStep(3);
+
+  document.getElementById("persona-loading").classList.remove("hidden");
+  document.getElementById("persona-results").classList.add("hidden");
+
+  try {
+    const data = await apiCall("/api/personas", {
+      brand: state.brand,
+      description: state.description,
+      platforms: state.platforms,
+      objective: state.objective,
+      research: state.research,
+    });
+
+    state.personas = data.personas;
+    renderPersonas(data.personas);
+  } catch (err) {
+    document.getElementById("persona-loading").classList.add("hidden");
+    showError(3, err.message);
+  }
+}
+
+function renderPersonas(personas) {
+  document.getElementById("persona-loading").classList.add("hidden");
+  document.getElementById("persona-results").classList.remove("hidden");
+
+  const grid = document.getElementById("personas-grid");
+  grid.innerHTML = personas
+    .map(
+      (p, i) => `
+    <div class="persona-card ${state.selectedPersonas.includes(p) ? 'selected' : ''}" data-index="${i}" onclick="selectPersona(${i})">
+      <div class="persona-check">✓</div>
+      <div class="persona-name">${esc(p.name)}</div>
+      <div class="persona-who">${esc(p.who)}</div>
+      <div class="persona-details">
+        <div class="persona-detail">
+          <span class="persona-detail-icon">😤</span>
+          <span class="persona-detail-label">Frustration</span>
+          <span class="persona-detail-value">${esc(p.frustration)}</span>
+        </div>
+        ${p.content_hook ? `
+        <div class="persona-detail">
+          <span class="persona-detail-icon">🎯</span>
+          <span class="persona-detail-label">Hook</span>
+          <span class="persona-detail-value">${esc(p.content_hook)}</span>
+        </div>` : ''}
+        ${p.decision_trigger ? `
+        <div class="persona-detail">
+          <span class="persona-detail-icon">⚡</span>
+          <span class="persona-detail-label">Trigger</span>
+          <span class="persona-detail-value">${esc(p.decision_trigger)}</span>
+        </div>` : ''}
+      </div>
+    </div>
+  `
+    )
+    .join("");
+}
+
+function selectPersona(index) {
+  const p = state.personas[index];
+  const selectedIdx = state.selectedPersonas.indexOf(p);
+  if (selectedIdx === -1) {
+    state.selectedPersonas.push(p);
+  } else {
+    state.selectedPersonas.splice(selectedIdx, 1);
+  }
+
+  // Update UI
+  renderPersonas(state.personas);
+  document.getElementById("btn-generate-content").disabled = state.selectedPersonas.length === 0;
+}
+
+function selectAllPersonas() {
+  state.selectedPersonas = [...state.personas];
+  renderPersonas(state.personas);
+  document.getElementById("btn-generate-content").disabled = state.selectedPersonas.length === 0;
+}
+
+function toggleCustomPersonaForm() {
+  const form = document.getElementById("custom-persona-form");
+  form.classList.toggle("hidden");
+}
+
+function addCustomPersona() {
+  const name = document.getElementById("custom-persona-name").value.trim();
+  const who = document.getElementById("custom-persona-who").value.trim();
+  const frustration = document.getElementById("custom-persona-frustration").value.trim();
+  
+  if (!name || !who) {
+    return showError(3, "Name and description are required for a custom persona");
+  }
+  
+  const customP = {
+    name,
+    who,
+    frustration: frustration || "Not specified",
+    content_hook: "Custom tailored content",
+    decision_trigger: "Specific pain point resolution"
+  };
+  
+  state.personas.push(customP);
+  state.selectedPersonas.push(customP);
+  
+  // Clear form
+  document.getElementById("custom-persona-name").value = "";
+  document.getElementById("custom-persona-who").value = "";
+  document.getElementById("custom-persona-frustration").value = "";
+  toggleCustomPersonaForm();
+  
+  clearErrors();
+  renderPersonas(state.personas);
+  document.getElementById("btn-generate-content").disabled = false;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// STEP 3 → 4: Buckets + Posts
+// ═══════════════════════════════════════════════════════════════════════════
+async function generateContent() {
+  clearErrors();
+  goToStep(4);
+
+  const globalFeedbackInput = document.getElementById("global-feedback");
+  if (globalFeedbackInput) {
+    state.globalFeedback = globalFeedbackInput.value.trim();
+  } else {
+    state.globalFeedback = "";
+  }
+
+  const loadingEl = document.getElementById("content-loading");
+  const resultsEl = document.getElementById("content-results");
+  loadingEl.classList.remove("hidden");
+  resultsEl.classList.add("hidden");
+
+  try {
+    // Phase 1: Get buckets
+    setContentProgress(10, "Creating content buckets...", "Defining 5 strategic buckets based on research and persona");
+
+    const bucketData = await apiCall("/api/buckets", {
+      brand: state.brand,
+      description: state.description,
+      platforms: state.platforms,
+      objective: state.objective,
+      research: state.research,
+      personas: state.selectedPersonas,
+      globalFeedback: state.globalFeedback,
+    });
+
+    state.buckets = bucketData.buckets;
+    state.posts = {};
+
+    // Phase 2: Get posts for each bucket
+    for (let i = 0; i < state.buckets.length; i++) {
+      const bucket = state.buckets[i];
+      const pct = 20 + Math.round((70 * i) / state.buckets.length);
+      setContentProgress(
+        pct,
+        `Writing posts for "${bucket.name}"...`,
+        `Bucket ${i + 1} of ${state.buckets.length} — generating ${state.platforms.length} platform(s)`
+      );
+
+      const postData = await apiCall("/api/posts", {
+        brand: state.brand,
+        platforms: state.platforms,
+        objective: state.objective,
+        research: state.research,
+        personas: state.selectedPersonas,
+        bucket: bucket,
+        globalFeedback: state.globalFeedback,
+      });
+
+      state.posts[i] = postData.posts;
+    }
+
+    setContentProgress(100, "Done!", "Your content strategy is ready");
+
+    setTimeout(() => renderResults(), 400);
+  } catch (err) {
+    loadingEl.classList.add("hidden");
+    showError(4, err.message);
+  }
+}
+
+function setContentProgress(pct, label, sub) {
+  setProgress("progress-content", pct);
+  document.getElementById("content-loading-label").textContent = label;
+  document.getElementById("content-loading-sub").textContent = sub;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Render Results
+// ═══════════════════════════════════════════════════════════════════════════
+function renderResults() {
+  document.getElementById("content-loading").classList.add("hidden");
+  document.getElementById("content-results").classList.remove("hidden");
+
+  const totalPosts = Object.values(state.posts).reduce((sum, platformMap) => {
+    const firstPlatform = Object.values(platformMap)[0];
+    return sum + (Array.isArray(firstPlatform) ? firstPlatform.length : 0);
+  }, 0) * state.platforms.length;
+
+  // Summary bar
+  const summaryBar = document.getElementById("summary-bar");
+  summaryBar.innerHTML = `
+    <div class="summary-pill">Brand: <strong>${esc(state.brand)}</strong></div>
+    <div class="summary-pill">Personas: <strong>${esc(state.selectedPersonas.map(p => p.name).join(", "))}</strong></div>
+    <div class="summary-pill">Platforms: <strong>${state.platforms.join(", ")}</strong></div>
+    <div class="summary-pill">Buckets: <strong>${state.buckets.length}</strong></div>
+    <div class="summary-pill">Posts: <strong>${state.buckets.length * 5 * state.platforms.length}</strong></div>
+  `;
+
+  // Buckets
+  const container = document.getElementById("buckets-container");
+  
+  const globalFeedbackHTML = `
+    <div class="card mb-3" style="border-color: var(--accent-1); background: rgba(129, 140, 248, 0.05);">
+      <div class="card-title mb-1">Global Strategy Feedback</div>
+      <p class="text-muted mb-2" style="font-size: 0.8rem;">Provide feedback to rewrite all buckets and all posts across the board.</p>
+      <div class="form-group mb-2">
+         <textarea class="form-textarea" id="global-feedback" rows="2" placeholder="e.g., Make everything more formal, focus entirely on B2B, etc.">${state.globalFeedback || ""}</textarea>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="generateContent()">⟳ Regenerate Everything</button>
+    </div>
+  `;
+
+  container.innerHTML = globalFeedbackHTML + state.buckets
+    .map((bucket, bi) => {
+      const color = BUCKET_COLORS[bi % BUCKET_COLORS.length];
+      const posts = state.posts[bi] || {};
+
+      return `
+      <div class="bucket-section">
+        <div class="bucket-card" id="bucket-${bi}">
+          <div class="bucket-header" onclick="toggleBucket(${bi})">
+            <div class="bucket-color-bar" style="background: ${color}"></div>
+            <div class="bucket-info">
+              <div class="bucket-name">${esc(bucket.name)}</div>
+              <div class="bucket-meta">
+                <span class="bucket-tag">${esc(bucket.function)}</span>
+                <span class="bucket-tag">${esc(bucket.cta)}</span>
+              </div>
+              <div class="bucket-purpose">${esc(bucket.purpose)}</div>
+            </div>
+            <div class="bucket-toggle">▼</div>
+          </div>
+          <div class="bucket-body">
+            ${renderPlatformTabs(bi, posts)}
+            <div class="bucket-actions mt-2" style="display:flex; gap:0.5rem; width:100%;">
+              <input type="text" class="form-input" id="feedback-bucket-${bi}" placeholder="Feedback for this entire bucket..." style="flex:1" />
+              <button class="btn btn-secondary" onclick="regenerateBucket(${bi})" id="regen-btn-${bi}">
+                ⟳ Regenerate Bucket
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    })
+    .join("");
+
+  // Auto-open first bucket
+  toggleBucket(0);
+}
+
+function renderPlatformTabs(bucketIndex, posts) {
+  if (state.platforms.length === 0) return "";
+
+  // Tabs
+  const tabs = state.platforms
+    .map(
+      (p, pi) =>
+        `<button class="platform-tab ${pi === 0 ? "active" : ""}" onclick="switchPlatform(${bucketIndex}, '${p}', this)">${p}</button>`
+    )
+    .join("");
+
+  // Panels
+  const panels = state.platforms
+    .map((p, pi) => {
+      const platformPosts = posts[p] || [];
+      const postsHTML = platformPosts
+        .map(
+          (post, postIdx) => `
+        <div class="post-item" id="post-${bucketIndex}-${p}-${postIdx}">
+          <div class="post-header">
+            <span class="post-number">Post ${postIdx + 1}</span>
+            <button class="copy-btn" onclick="copyPost(${bucketIndex}, '${p}', ${postIdx}, this)">Copy</button>
+          </div>
+          <div class="post-text">
+            <div style="margin-bottom: 0.5rem;"><strong style="color:var(--accent-1);">💡 Idea:</strong> ${esc(post.idea || "")}</div>
+            <div style="margin-bottom: 0.5rem;"><strong style="color:var(--accent-2);">🎨 Visual:</strong> ${esc(post.visual_cue || "")}</div>
+            <div style="margin-bottom: 0.5rem;"><strong style="color:var(--accent-3);">📝 Image Copy:</strong> ${esc(post.inner_copy || "")}</div>
+            <div style="margin-top: 1rem;"><strong style="color:var(--text-main);">💬 Caption:</strong><br/><br/>${esc(post.caption || "")}</div>
+          </div>
+          <div class="post-feedback-box mt-2" style="display:flex; gap:0.5rem; flex-direction:column;">
+            <input type="text" class="form-input form-input-sm" id="feedback-post-${bucketIndex}-${p}-${postIdx}" placeholder="Feedback for this specific post..." />
+            <button class="btn btn-secondary btn-sm" style="align-self: flex-start;" onclick="regeneratePost(${bucketIndex}, '${p}', ${postIdx})" id="regen-post-btn-${bucketIndex}-${p}-${postIdx}">Rewrite Post</button>
+          </div>
+        </div>
+      `
+        )
+        .join("");
+
+      return `<div class="platform-panel ${pi === 0 ? "active" : ""}" data-bucket="${bucketIndex}" data-platform="${p}">
+        <div class="posts-container">${postsHTML}</div>
+      </div>`;
+    })
+    .join("");
+
+  return `<div class="platform-tabs">${tabs}</div>${panels}`;
+}
+
+function toggleBucket(index) {
+  const card = document.getElementById(`bucket-${index}`);
+  card.classList.toggle("open");
+}
+
+function switchPlatform(bucketIndex, platform, tabEl) {
+  // Update tabs
+  tabEl.closest(".platform-tabs").querySelectorAll(".platform-tab").forEach((t) => t.classList.remove("active"));
+  tabEl.classList.add("active");
+
+  // Update panels
+  const bucket = document.getElementById(`bucket-${bucketIndex}`);
+  bucket.querySelectorAll(".platform-panel").forEach((p) => {
+    p.classList.toggle("active", p.dataset.platform === platform);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Copy
+// ═══════════════════════════════════════════════════════════════════════════
+function copyPost(bucketIndex, platform, postIndex, btn) {
+  const posts = state.posts[bucketIndex]?.[platform];
+  if (!posts || !posts[postIndex]) return;
+
+  const post = posts[postIndex];
+  const copyText = `💡 Idea:\n${post.idea}\n\n🎨 Visual:\n${post.visual_cue}\n\n📝 Image Copy:\n${post.inner_copy}\n\n💬 Caption:\n${post.caption}`;
+
+  navigator.clipboard.writeText(copyText).then(() => {
+    btn.textContent = "Copied!";
+    btn.classList.add("copied");
+    setTimeout(() => {
+      btn.textContent = "Copy";
+      btn.classList.remove("copied");
+    }, 1500);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Regenerate Bucket Posts
+// ═══════════════════════════════════════════════════════════════════════════
+async function regenerateBucket(bucketIndex) {
+  const btn = document.getElementById(`regen-btn-${bucketIndex}`);
+  btn.disabled = true;
+  btn.textContent = "⟳ Regenerating...";
+
+  try {
+    const data = await apiCall("/api/posts", {
+      brand: state.brand,
+      platforms: state.platforms,
+      objective: state.objective,
+      research: state.research,
+      personas: state.selectedPersonas,
+      bucket: state.buckets[bucketIndex],
+    });
+
+    state.posts[bucketIndex] = data.posts;
+
+    // Re-render just this bucket's body
+    const card = document.getElementById(`bucket-${bucketIndex}`);
+    const body = card.querySelector(".bucket-body");
+    body.innerHTML = `
+      ${renderPlatformTabs(bucketIndex, data.posts)}
+      <div class="bucket-actions">
+        <button class="btn btn-ghost" onclick="regenerateBucket(${bucketIndex})" id="regen-btn-${bucketIndex}">
+          ⟳ Regenerate posts
+        </button>
+      </div>
+    `;
+  } catch (err) {
+    showError(4, err.message);
+  } finally {
+    // Re-query button in case DOM changed
+    const newBtn = document.getElementById(`regen-btn-${bucketIndex}`);
+    if (newBtn) {
+      newBtn.disabled = false;
+      newBtn.textContent = "⟳ Regenerate posts";
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Reset
+// ═══════════════════════════════════════════════════════════════════════════
+function resetAll() {
+  state = {
+    brand: "",
+    description: "",
+    platforms: [],
+    objective: "",
+    research: null,
+    personas: [],
+    selectedPersonas: [],
+    buckets: [],
+    posts: {},
+  };
+
+  document.getElementById("brand-name").value = "";
+  document.getElementById("brand-desc").value = "";
+  document.getElementById("objective").selectedIndex = 0;
+  document.querySelectorAll('.checkbox-pill input').forEach((c) => (c.checked = c.id === "p-instagram"));
+
+  clearErrors();
+  goToStep(1);
+
+  // Reset sub-views
+  document.getElementById("research-loading").classList.remove("hidden");
+  document.getElementById("research-results").classList.add("hidden");
+  document.getElementById("persona-loading").classList.add("hidden");
+  document.getElementById("persona-results").classList.add("hidden");
+  document.getElementById("content-loading").classList.add("hidden");
+  document.getElementById("content-results").classList.add("hidden");
+  setProgress("progress-research", 0);
+  setProgress("progress-content", 0);
+}
+</script>
+</body>
+</html>
