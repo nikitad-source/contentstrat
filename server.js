@@ -11,7 +11,7 @@ app.use(express.static(path.join(__dirname, "public")));
 
 const PORT = process.env.PORT || 3000;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_MODEL = "gemini-1.5-flash"; // Using a more stable model for production
+const GEMINI_MODEL = "gemini-3.1-pro-preview"; // Flagship Gemini model — best reasoning + content quality
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
 
 // ─── Gemini API helper ──────────────────────────────────────────────────────
@@ -220,9 +220,9 @@ app.post("/api/personas", async (req, res) => {
 
 app.post("/api/buckets", async (req, res) => {
   try {
-    const { brand, description, platforms, objective, research, personas } = req.body;
+    const { brand, description, platforms, objective, research, personas, globalFeedback } = req.body;
     const system = `You are a content strategist. Design content bucket frameworks. Respond ONLY with a valid JSON array of 5 objects.`;
-    const user = `Brand: ${brand}\nObjective: ${objective}\nResearch: ${JSON.stringify(research)}\nPersonas: ${JSON.stringify(personas)}\n\nGenerate 5 buckets: { name, function, purpose, description, content_formats: [], why_for_persona, cta }`;
+    const user = `Brand: ${brand}\nObjective: ${objective}\nResearch: ${JSON.stringify(research)}\nPersonas: ${JSON.stringify(personas)}\nGlobal Feedback: ${globalFeedback || "None"}\n\nGenerate 5 buckets: { name, function, purpose, description, content_formats: [], why_for_persona, cta }`;
 
     const schema = {
       type: "ARRAY",

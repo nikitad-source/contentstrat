@@ -928,3 +928,24 @@ body {
   padding: 6px 12px;
   font-size: 0.8rem;
 }
+
+/* Post Feedback Box */
+.post-feedback-box {
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+  margin-top: 1.5rem !important;
+}
+
+/* Research Grid Inputs */
+.research-grid .form-input,
+.research-grid .form-textarea {
+  background: rgba(255, 255, 255, 0.02);
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+.research-grid .form-input:focus,
+.research-grid .form-textarea:focus {
+  background: var(--bg-secondary);
+  border-color: var(--accent-1);
+}
+

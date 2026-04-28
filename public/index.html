@@ -399,10 +399,10 @@ async function generatePersonas() {
     industry: document.getElementById('res-industry').value.trim(),
     product_stage: document.getElementById('res-product_stage').value.trim(),
     audience_summary: document.getElementById('res-audience_summary').value.trim(),
-    core_pain_points: document.getElementById('res-core_pain_points').value.split('\\n').filter(s => s.trim()),
+    core_pain_points: document.getElementById('res-core_pain_points').value.split('\n').filter(s => s.trim()),
     competitive_landscape: document.getElementById('res-competitive_landscape').value.trim(),
-    key_differentiators: document.getElementById('res-key_differentiators').value.split('\\n').filter(s => s.trim()),
-    content_angles: document.getElementById('res-content_angles').value.split('\\n').filter(s => s.trim()),
+    key_differentiators: document.getElementById('res-key_differentiators').value.split('\n').filter(s => s.trim()),
+    content_angles: document.getElementById('res-content_angles').value.split('\n').filter(s => s.trim()),
     what_to_avoid: document.getElementById('res-what_to_avoid').value.trim(),
     brand_voice_suggestion: document.getElementById('res-brand_voice_suggestion').value.trim(),
     tonality: document.getElementById('res-tonality').value.trim(),
@@ -762,6 +762,8 @@ function copyPost(bucketIndex, platform, postIndex, btn) {
 // ═══════════════════════════════════════════════════════════════════════════
 async function regenerateBucket(bucketIndex) {
   const btn = document.getElementById(`regen-btn-${bucketIndex}`);
+  const feedback = document.getElementById(`feedback-bucket-${bucketIndex}`).value.trim();
+  
   btn.disabled = true;
   btn.textContent = "⟳ Regenerating...";
 
@@ -773,6 +775,8 @@ async function regenerateBucket(bucketIndex) {
       research: state.research,
       personas: state.selectedPersonas,
       bucket: state.buckets[bucketIndex],
+      globalFeedback: state.globalFeedback,
+      bucketFeedback: feedback,
     });
 
     state.posts[bucketIndex] = data.posts;
@@ -782,21 +786,68 @@ async function regenerateBucket(bucketIndex) {
     const body = card.querySelector(".bucket-body");
     body.innerHTML = `
       ${renderPlatformTabs(bucketIndex, data.posts)}
-      <div class="bucket-actions">
-        <button class="btn btn-ghost" onclick="regenerateBucket(${bucketIndex})" id="regen-btn-${bucketIndex}">
-          ⟳ Regenerate posts
+      <div class="bucket-actions mt-2" style="display:flex; gap:0.5rem; width:100%;">
+        <input type="text" class="form-input" id="feedback-bucket-${bucketIndex}" placeholder="Feedback for this entire bucket..." style="flex:1" value="${esc(feedback)}" />
+        <button class="btn btn-secondary" onclick="regenerateBucket(${bucketIndex})" id="regen-btn-${bucketIndex}">
+          ⟳ Regenerate Bucket
         </button>
       </div>
     `;
   } catch (err) {
     showError(4, err.message);
   } finally {
-    // Re-query button in case DOM changed
     const newBtn = document.getElementById(`regen-btn-${bucketIndex}`);
     if (newBtn) {
       newBtn.disabled = false;
-      newBtn.textContent = "⟳ Regenerate posts";
+      newBtn.textContent = "⟳ Regenerate Bucket";
     }
+  }
+}
+
+async function regeneratePost(bucketIndex, platform, postIndex) {
+  const btn = document.getElementById(`regen-post-btn-${bucketIndex}-${platform}-${postIndex}`);
+  const feedback = document.getElementById(`feedback-post-${bucketIndex}-${platform}-${postIndex}`).value.trim();
+  
+  if (!feedback) {
+    alert("Please enter feedback before rewriting the post.");
+    return;
+  }
+
+  const currentPost = state.posts[bucketIndex][platform][postIndex];
+  
+  btn.disabled = true;
+  btn.textContent = "Rewriting...";
+
+  try {
+    const data = await apiCall("/api/regenerate-post", {
+      brand: state.brand,
+      platform: platform,
+      objective: state.objective,
+      currentPost: currentPost,
+      feedback: feedback,
+    });
+
+    // Update state
+    state.posts[bucketIndex][platform][postIndex] = data.post;
+
+    // Update UI for just this post
+    const postEl = document.getElementById(`post-${bucketIndex}-${platform}-${postIndex}`);
+    const postText = postEl.querySelector(".post-text");
+    postText.innerHTML = `
+      <div style="margin-bottom: 0.5rem;"><strong style="color:var(--accent-1);">💡 Idea:</strong> ${esc(data.post.idea || "")}</div>
+      <div style="margin-bottom: 0.5rem;"><strong style="color:var(--accent-2);">🎨 Visual:</strong> ${esc(data.post.visual_cue || "")}</div>
+      <div style="margin-bottom: 0.5rem;"><strong style="color:var(--accent-3);">📝 Image Copy:</strong> ${esc(data.post.inner_copy || "")}</div>
+      <div style="margin-top: 1rem;"><strong style="color:var(--text-main);">💬 Caption:</strong><br/><br/>${esc(data.post.caption || "")}</div>
+    `;
+    
+    // Clear feedback input
+    document.getElementById(`feedback-post-${bucketIndex}-${platform}-${postIndex}`).value = "";
+    
+  } catch (err) {
+    showError(4, err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Rewrite Post";
   }
 }
 
