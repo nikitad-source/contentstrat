@@ -25,14 +25,12 @@ async function callGemini(systemPrompt, userPrompt, temperature = 0.7, schema = 
     generationConfig.responseSchema = schema;
   }
 
-  const GEMINI_URL_BASE = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
-  console.log(`Fetching Gemini API: ${GEMINI_URL_BASE}`);
-  const response = await fetch(GEMINI_URL_BASE, {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+  console.log(`Fetching Gemini API: ${url.replace(GEMINI_API_KEY, "KEY_HIDDEN")}`);
+  
+  const response = await fetch(url, {
     method: "POST",
-    headers: { 
-      "Content-Type": "application/json",
-      "x-goog-api-key": GEMINI_API_KEY
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       systemInstruction: { parts: [{ text: systemPrompt }] },
       contents: [{ role: "user", parts: [{ text: userPrompt }] }],
