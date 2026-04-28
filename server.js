@@ -15,6 +15,9 @@ const GEMINI_MODEL = "gemini-3.1-pro-preview"; // Using the latest flagship mode
 
 // ─── Gemini API helper ──────────────────────────────────────────────────────
 async function callGemini(systemPrompt, userPrompt, temperature = 0.7, schema = null) {
+  if (!GEMINI_API_KEY) {
+    throw new Error("GEMINI_API_KEY is not set in environment variables. Please check your Vercel/Local configuration.");
+  }
   const generationConfig = {
     temperature,
     maxOutputTokens: 8192,
