@@ -10,9 +10,8 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
 const PORT = process.env.PORT || 3000;
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_MODEL = "gemini-3.1-pro-preview"; // Flagship Gemini model — best reasoning + content quality
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+const GEMINI_API_KEY = (process.env.GEMINI_API_KEY || "").trim();
+const GEMINI_MODEL = "gemini-3.1-pro-preview"; // Using the latest flagship model found in available models
 
 // ─── Gemini API helper ──────────────────────────────────────────────────────
 async function callGemini(systemPrompt, userPrompt, temperature = 0.7, schema = null) {
@@ -26,9 +25,14 @@ async function callGemini(systemPrompt, userPrompt, temperature = 0.7, schema = 
     generationConfig.responseSchema = schema;
   }
 
-  const response = await fetch(GEMINI_URL, {
+  const GEMINI_URL_BASE = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+  console.log(`Fetching Gemini API: ${GEMINI_URL_BASE}`);
+  const response = await fetch(GEMINI_URL_BASE, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { 
+      "Content-Type": "application/json",
+      "x-goog-api-key": GEMINI_API_KEY
+    },
     body: JSON.stringify({
       systemInstruction: { parts: [{ text: systemPrompt }] },
       contents: [{ role: "user", parts: [{ text: userPrompt }] }],
