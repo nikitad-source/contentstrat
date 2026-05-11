@@ -165,7 +165,7 @@ app.post("/api/research", async (req, res) => {
     const objContext = OBJECTIVE_CONTEXT[objective] || OBJECTIVE_CONTEXT["awareness"];
 
     const system = `You are a senior brand strategist. Analyze objectively and provide actionable insights. Respond ONLY with a valid JSON object.`;
-    const user = `Brand: ${brand}\nWhat they do: ${description}\nPlatforms: ${platforms.join(", ")}\nObjective: ${objContext.label}\n\nReturn JSON: { "industry", "product_stage", "audience_summary", "core_pain_points": [], "competitive_landscape", "key_differentiators": [], "content_angles": [], "what_to_avoid", "brand_voice_suggestion", "tonality", "objective_insight" }`;
+    const user = `Brand: ${brand}\nWhat they do: ${description}\nPlatforms: ${platforms.join(", ")}\nObjective: ${objContext.label}\n\nReturn JSON: { "industry", "product_stage", "audience_summary", "core_pain_points": [], "competitive_landscape", "key_differentiators": [], "content_angles": [], "what_to_avoid", "brand_voice_suggestion", "tonality", "objective_insight", "brand_positioning", "key_competitors": { "local": [], "global": [] } }`;
 
     const schema = {
       type: "OBJECT",
@@ -180,9 +180,18 @@ app.post("/api/research", async (req, res) => {
         what_to_avoid: { type: "STRING" },
         brand_voice_suggestion: { type: "STRING" },
         tonality: { type: "STRING" },
-        objective_insight: { type: "STRING" }
+        objective_insight: { type: "STRING" },
+        brand_positioning: { type: "STRING" },
+        key_competitors: { 
+          type: "OBJECT", 
+          properties: {
+            local: { type: "ARRAY", items: { type: "STRING" } },
+            global: { type: "ARRAY", items: { type: "STRING" } }
+          },
+          required: ["local", "global"]
+        }
       },
-      required: ["industry", "product_stage", "audience_summary", "core_pain_points", "competitive_landscape", "key_differentiators", "content_angles", "what_to_avoid", "brand_voice_suggestion", "tonality", "objective_insight"]
+      required: ["industry", "product_stage", "audience_summary", "core_pain_points", "competitive_landscape", "key_differentiators", "content_angles", "what_to_avoid", "brand_voice_suggestion", "tonality", "objective_insight", "brand_positioning", "key_competitors"]
     };
 
     const raw = await callGemini(system, user, 0.6, schema);
@@ -269,6 +278,7 @@ app.post("/api/posts", async (req, res) => {
       const formatRules = PLATFORM_FORMAT_RULES[platform] || "";
       const system = `You are a social media copywriter. Write specific content for humans on ${platform}. 
       CRITICAL: If the format is a Carousel, you MUST provide slide-wise details (Slide 1, Slide 2, etc.) inside the 'visual_cue' and 'inner_copy' fields respectively. 
+      CRITICAL: The 'outer_copy' (caption) MUST BE EXTREMELY PUNCHY AND UNDER 20 WORDS TOTAL. Do not exceed this limit.
       Respond ONLY with a JSON array of ${pCount} post objects.`;
       const user = `Brand: ${brand}\nPlatform: ${platform}\nObjective: ${objective}\nBucket: ${bucket.name}\n${formatRules}\nSpecial Days/Holidays for this cycle: ${specialDays || "None"}\n\nGlobal Feedback: ${globalFeedback || "None"}\nBucket Feedback: ${bucketFeedback || "None"}\n\nReturn ${pCount} objects: { format, idea, visual_cue, inner_copy, outer_copy, reference_link }`;
 
@@ -302,6 +312,7 @@ app.post("/api/regenerate-post", async (req, res) => {
     const { brand, platform, objective, currentPost, feedback } = req.body;
     const system = `You are an expert copywriter. Rewrite a single post based on feedback. 
     CRITICAL: If the format is a Carousel, you MUST provide slide-wise details (Slide 1, Slide 2, etc.) inside the 'visual_cue' and 'inner_copy' fields respectively. 
+    CRITICAL: The 'outer_copy' (caption) MUST BE EXTREMELY PUNCHY AND UNDER 20 WORDS TOTAL. Do not exceed this limit.
     Respond ONLY with a valid JSON object.`;
     const user = `Brand: ${brand}\nPlatform: ${platform}\nDraft: ${JSON.stringify(currentPost)}\nFeedback: ${feedback}\n\nReturn: { format, idea, visual_cue, inner_copy, outer_copy, reference_link }`;
 

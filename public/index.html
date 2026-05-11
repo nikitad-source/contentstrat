@@ -449,6 +449,18 @@ function renderResearch(r) {
       <div class="research-item-label">Objective Insight</div>
       <textarea class="form-textarea" id="res-objective_insight" rows="2">${esc(toText(r.objective_insight))}</textarea>
     </div>
+    <div class="research-item" style="grid-column: 1 / -1;">
+      <div class="research-item-label">Brand Positioning Statement</div>
+      <textarea class="form-textarea" id="res-brand_positioning" rows="3">${esc(toText(r.brand_positioning))}</textarea>
+    </div>
+    <div class="research-item" style="grid-column: 1 / 2;">
+      <div class="research-item-label">Local Competitors (One per line)</div>
+      <textarea class="form-textarea" id="res-competitors_local" rows="3">${esc(toText(r.key_competitors?.local))}</textarea>
+    </div>
+    <div class="research-item" style="grid-column: 2 / 3;">
+      <div class="research-item-label">Global Competitors (One per line)</div>
+      <textarea class="form-textarea" id="res-competitors_global" rows="3">${esc(toText(r.key_competitors?.global))}</textarea>
+    </div>
   `;
 }
 
@@ -471,6 +483,11 @@ async function generatePersonas() {
     brand_voice_suggestion: document.getElementById('res-brand_voice_suggestion').value.trim(),
     tonality: document.getElementById('res-tonality').value.trim(),
     objective_insight: document.getElementById('res-objective_insight').value.trim(),
+    brand_positioning: document.getElementById('res-brand_positioning').value.trim(),
+    key_competitors: {
+      local: document.getElementById('res-competitors_local').value.split('\n').filter(s => s.trim()),
+      global: document.getElementById('res-competitors_global').value.split('\n').filter(s => s.trim()),
+    }
   };
 
   goToStep(3);
@@ -1028,32 +1045,98 @@ function copyToCalendar() {
 
   let currentDate = new Date(startDate);
   const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
+  // 1. Identify Special Days Bucket and parse dates
+  const specialBucketIndex = state.buckets.findIndex(b => b.name.toLowerCase().includes("special day"));
+  const specialDatesMap = {}; // { "YYYY-MM-DD": postIndex }
+  
+  if (specialBucketIndex !== -1 && state.currentSpecialDays) {
+    const year = startDate.getFullYear();
+    // Regex for Month Day or Day Month
+    const dateRegex = /(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d+)|(\d+)\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)/gi;
+    let match;
+    let specialDayIndex = 0;
+    
+    while ((match = dateRegex.exec(state.currentSpecialDays)) !== null) {
+      const monthStr = match[1] || match[4];
+      const dayStr = match[2] || match[3];
+      const monthIdx = months.findIndex(m => monthStr.toLowerCase().startsWith(m.toLowerCase()));
+      if (monthIdx !== -1) {
+        const d = new Date(year, monthIdx, parseInt(dayStr));
+        const key = d.toISOString().split('T')[0];
+        specialDatesMap[key] = specialDayIndex++;
+      }
+    }
+  }
+
+  // 2. Prepare all other posts (Slots)
+  let normalSlots = []; // Array of { bIdx, pIdx }
   state.buckets.forEach((bucket, bIdx) => {
+    if (bIdx === specialBucketIndex) return;
+    const firstPlatform = state.platforms[0];
+    const posts = state.posts[bIdx] && state.posts[bIdx][firstPlatform];
+    if (posts) {
+      posts.forEach((_, pIdx) => {
+        normalSlots.push({ bIdx, pIdx });
+      });
+    }
+  });
+
+  // 3. Shuffle normal slots
+  for (let i = normalSlots.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [normalSlots[i], normalSlots[j]] = [normalSlots[j], normalSlots[i]];
+  }
+
+  // 4. Plot chronologically
+  const totalPostsNeeded = state.totalPosts;
+  let slotIndex = 0;
+  
+  for (let i = 0; i < totalPostsNeeded; i++) {
+    const dayName = days[currentDate.getDay()];
+    const dateStr = currentDate.toISOString().split('T')[0];
+    
+    let bIdx, pIdx;
+    
+    if (specialDatesMap[dateStr] !== undefined) {
+      bIdx = specialBucketIndex;
+      pIdx = specialDatesMap[dateStr];
+    } else {
+      if (slotIndex < normalSlots.length) {
+        const slot = normalSlots[slotIndex++];
+        bIdx = slot.bIdx;
+        pIdx = slot.pIdx;
+      } else {
+        // Fallback if we run out of normal slots (shouldn't happen with correct counts)
+        currentDate.setDate(currentDate.getDate() + 1);
+        continue;
+      }
+    }
+
+    const bucket = state.buckets[bIdx];
+    if (!bucket) {
+      currentDate.setDate(currentDate.getDate() + 1);
+      continue;
+    }
+
     state.platforms.forEach(platform => {
-      const posts = state.posts[bIdx] && state.posts[bIdx][platform];
-      if (posts) {
-        posts.forEach(post => {
-          const dayName = days[currentDate.getDay()];
-          const dateStr = currentDate.toISOString().split('T')[0];
-          
-          const clean = (val) => (val || "").toString().replace(/[\n\r\t]/g, " ").trim();
+      const post = state.posts[bIdx] && state.posts[bIdx][platform] && state.posts[bIdx][platform][pIdx];
+      if (post) {
+        const clean = (val) => (val || "").toString().replace(/[\n\r\t]/g, " ").trim();
+        const format = clean(post.format || "Static");
+        const concept = clean(post.idea);
+        const innerCopy = clean(post.inner_copy);
+        const outerCopy = clean(post.outer_copy);
+        const visual = clean(post.visual_cue);
+        const ref = clean(post.reference_link);
 
-          const format = clean(post.format || "Static");
-          const concept = clean(post.idea);
-          const innerCopy = clean(post.inner_copy);
-          const outerCopy = clean(post.outer_copy);
-          const visual = clean(post.visual_cue);
-          const ref = clean(post.reference_link);
-
-          output += `${dayName}\t${dateStr}\t${bucket.name}\t${format}\t${concept}\t${innerCopy}\t${outerCopy}\t${visual}\t${ref}\n`;
-          
-          // Increment date for the next post
-          currentDate.setDate(currentDate.getDate() + 1);
-        });
+        output += `${dayName}\t${dateStr}\t${bucket.name}\t${format}\t${concept}\t${innerCopy}\t${outerCopy}\t${visual}\t${ref}\n`;
       }
     });
-  });
+
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
 
   navigator.clipboard.writeText(output).then(() => {
     alert("Calendar content copied to clipboard! \n\nColumns: Day, Date, Bucket, Format, Concept, Inner Copy, Outer Copy, Visual Cue, Reference Links. \n\nYou can now paste this directly into Excel.");
