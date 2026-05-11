@@ -225,9 +225,9 @@ app.post("/api/personas", async (req, res) => {
 
 app.post("/api/buckets", async (req, res) => {
   try {
-    const { brand, description, platforms, objective, research, personas, globalFeedback } = req.body;
+    const { brand, description, platforms, objective, research, personas, globalFeedback, specialDays } = req.body;
     const system = `You are a content strategist. Design content bucket frameworks. Respond ONLY with a valid JSON array of 5 objects.`;
-    const user = `Brand: ${brand}\nObjective: ${objective}\nResearch: ${JSON.stringify(research)}\nPersonas: ${JSON.stringify(personas)}\nGlobal Feedback: ${globalFeedback || "None"}\n\nGenerate 5 buckets: { name, function, purpose, description, content_formats: [], why_for_persona, cta }`;
+    const user = `Brand: ${brand}\nObjective: ${objective}\nResearch: ${JSON.stringify(research)}\nPersonas: ${JSON.stringify(personas)}\nSpecial Days/Holidays to factor in: ${specialDays || "None"}\nGlobal Feedback: ${globalFeedback || "None"}\n\nGenerate 5 buckets: { name, function, purpose, description, content_formats: [], why_for_persona, cta }`;
 
     const schema = {
       type: "ARRAY",
@@ -255,13 +255,13 @@ app.post("/api/buckets", async (req, res) => {
 
 app.post("/api/posts", async (req, res) => {
   try {
-    const { brand, platforms, objective, research, personas, bucket, globalFeedback, bucketFeedback } = req.body;
+    const { brand, platforms, objective, research, personas, bucket, globalFeedback, bucketFeedback, specialDays } = req.body;
     const platformPosts = {};
 
     for (const platform of platforms) {
       const formatRules = PLATFORM_FORMAT_RULES[platform] || "";
       const system = `You are a social media copywriter. Write specific content for humans on ${platform}. Respond ONLY with a JSON array of 5 post objects.`;
-      const user = `Brand: ${brand}\nPlatform: ${platform}\nObjective: ${objective}\nBucket: ${bucket.name}\n${formatRules}\n\nGlobal Feedback: ${globalFeedback || "None"}\nBucket Feedback: ${bucketFeedback || "None"}\n\nReturn 5 objects: { idea, visual_cue, inner_copy, caption }`;
+      const user = `Brand: ${brand}\nPlatform: ${platform}\nObjective: ${objective}\nBucket: ${bucket.name}\n${formatRules}\nSpecial Days/Holidays to factor in: ${specialDays || "None"}\n\nGlobal Feedback: ${globalFeedback || "None"}\nBucket Feedback: ${bucketFeedback || "None"}\n\nReturn 5 objects: { idea, visual_cue, inner_copy, caption }`;
 
       const schema = {
         type: "ARRAY",
