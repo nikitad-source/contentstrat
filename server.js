@@ -279,6 +279,7 @@ app.post("/api/posts", async (req, res) => {
       const system = `You are a social media copywriter. Write specific content for humans on ${platform}. 
       CRITICAL: If the format is a Carousel, you MUST provide slide-wise details (Slide 1, Slide 2, etc.) inside the 'visual_cue' and 'inner_copy' fields respectively. 
       CRITICAL: The 'outer_copy' (caption) MUST BE EXTREMELY PUNCHY AND UNDER 20 WORDS TOTAL. Do not exceed this limit.
+      CRITICAL: Content related to specific Special Days/Holidays MUST be placed EXCLUSIVELY in the "Special Days" bucket. Do NOT mention them in other buckets.
       Respond ONLY with a JSON array of ${pCount} post objects.`;
       const user = `Brand: ${brand}\nPlatform: ${platform}\nObjective: ${objective}\nBucket: ${bucket.name}\n${formatRules}\nSpecial Days/Holidays for this cycle: ${specialDays || "None"}\n\nGlobal Feedback: ${globalFeedback || "None"}\nBucket Feedback: ${bucketFeedback || "None"}\n\nReturn ${pCount} objects: { format, idea, visual_cue, inner_copy, outer_copy, reference_link }`;
 

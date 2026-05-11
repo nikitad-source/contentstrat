@@ -1047,8 +1047,16 @@ function copyToCalendar() {
   const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
+  // Helper for consistent local date keys
+  const getLocalDateKey = (date) => {
+    const y = date.getFullYear();
+    const m = (date.getMonth() + 1).toString().padStart(2, '0');
+    const d = date.getDate().toString().padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  };
+
   // 1. Identify Special Days Bucket and parse dates
-  const specialBucketIndex = state.buckets.findIndex(b => b.name.toLowerCase().includes("special day"));
+  const specialBucketIndex = state.buckets.findIndex(b => b.name.toLowerCase().includes("special day") || b.name.toLowerCase().includes("occasion"));
   const specialDatesMap = {}; // { "YYYY-MM-DD": postIndex }
   
   if (specialBucketIndex !== -1 && state.currentSpecialDays) {
@@ -1064,7 +1072,7 @@ function copyToCalendar() {
       const monthIdx = months.findIndex(m => monthStr.toLowerCase().startsWith(m.toLowerCase()));
       if (monthIdx !== -1) {
         const d = new Date(year, monthIdx, parseInt(dayStr));
-        const key = d.toISOString().split('T')[0];
+        const key = getLocalDateKey(d);
         specialDatesMap[key] = specialDayIndex++;
       }
     }
@@ -1095,7 +1103,7 @@ function copyToCalendar() {
   
   for (let i = 0; i < totalPostsNeeded; i++) {
     const dayName = days[currentDate.getDay()];
-    const dateStr = currentDate.toISOString().split('T')[0];
+    const dateStr = getLocalDateKey(currentDate);
     
     let bIdx, pIdx;
     
