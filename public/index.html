@@ -248,6 +248,14 @@
 const BACKEND = window.location.origin;
 const BUCKET_COLORS = ["#818cf8", "#34d399", "#f59e0b", "#f472b6", "#38bdf8", "#a78bfa", "#fb923c"];
 
+let state = {
+  brand: "",
+  description: "",
+  platforms: [],
+  objective: "",
+  research: null,
+  personas: [],
+  selectedPersonas: [],
   buckets: [],
   posts: {},  // { bucketIndex: { platform: [posts] } }
   calendarLinks: JSON.parse(localStorage.getItem('calendarLinks') || '[]'),
