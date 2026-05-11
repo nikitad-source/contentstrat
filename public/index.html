@@ -90,6 +90,11 @@
         </select>
       </div>
 
+      <div class="form-group mt-1">
+        <label class="form-label" for="special-days">Special Days / Holidays for this month (Optional)</label>
+        <textarea class="form-textarea" id="special-days" placeholder="e.g. Independence Day (Aug 15), Product Launch (Aug 20)..." style="min-height: 60px;"></textarea>
+      </div>
+
       <button class="btn btn-primary btn-full mt-2" id="btn-start" onclick="startResearch()">
         Generate Strategy →
       </button>
@@ -336,6 +341,7 @@ async function startResearch() {
   state.description = description;
   state.platforms = platforms;
   state.objective = objective;
+  state.currentSpecialDays = document.getElementById("special-days").value.trim();
 
   // Move to step 2
   goToStep(2);
@@ -593,7 +599,8 @@ async function generateContent() {
       objective: state.objective,
       research: state.research,
       personas: state.selectedPersonas,
-      globalFeedback: state.globalFeedback
+      globalFeedback: state.globalFeedback,
+      specialDays: state.currentSpecialDays
     });
 
     state.buckets = bucketData.buckets;
@@ -616,7 +623,8 @@ async function generateContent() {
         research: state.research,
         personas: state.selectedPersonas,
         bucket: bucket,
-        globalFeedback: state.globalFeedback
+        globalFeedback: state.globalFeedback,
+        specialDays: state.currentSpecialDays
       });
 
       state.posts[i] = postData.posts;
@@ -815,7 +823,8 @@ async function regenerateBucket(bucketIndex) {
       personas: state.selectedPersonas,
       bucket: state.buckets[bucketIndex],
       globalFeedback: state.globalFeedback,
-      bucketFeedback: feedback
+      bucketFeedback: feedback,
+      specialDays: state.currentSpecialDays
     });
 
     state.posts[bucketIndex] = data.posts;
@@ -863,7 +872,8 @@ async function regeneratePost(bucketIndex, platform, postIndex) {
       platform: platform,
       objective: state.objective,
       currentPost: currentPost,
-      feedback: feedback
+      feedback: feedback,
+      specialDays: state.currentSpecialDays
     });
 
     // Update state
