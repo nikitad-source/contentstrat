@@ -210,11 +210,6 @@
             <input class="form-input" type="text" id="cal-link" placeholder="https://docs.google.com/spreadsheets/..." />
           </div>
         </div>
-        <div class="form-group mt-1">
-          <label class="form-label" for="cal-special-days">Special Days / Holidays (Optional)</label>
-          <textarea class="form-textarea" id="cal-special-days" placeholder="e.g. Independence Day (Aug 15), Founder's Day..."></textarea>
-          <p class="text-muted" style="font-size: 0.7rem; margin-top: 4px;">These will be factored into the content strategy generation.</p>
-        </div>
         <button class="btn btn-primary mt-1" onclick="addCalendarLink()">Add to Repository</button>
       </div>
 
@@ -245,7 +240,6 @@ let state = {
   buckets: [],
   posts: {},  // { bucketIndex: { platform: [posts] } }
   calendarLinks: JSON.parse(localStorage.getItem('calendarLinks') || '[]'),
-  currentSpecialDays: "",
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -342,10 +336,6 @@ async function startResearch() {
   state.description = description;
   state.platforms = platforms;
   state.objective = objective;
-
-  // Link Special Days from repository if brand name matches
-  const repoMatch = state.calendarLinks.find(l => l.brandName.toLowerCase() === brand.toLowerCase());
-  state.currentSpecialDays = repoMatch ? repoMatch.specialDays : "";
 
   // Move to step 2
   goToStep(2);
@@ -603,8 +593,7 @@ async function generateContent() {
       objective: state.objective,
       research: state.research,
       personas: state.selectedPersonas,
-      globalFeedback: state.globalFeedback,
-      specialDays: state.currentSpecialDays
+      globalFeedback: state.globalFeedback
     });
 
     state.buckets = bucketData.buckets;
@@ -627,8 +616,7 @@ async function generateContent() {
         research: state.research,
         personas: state.selectedPersonas,
         bucket: bucket,
-        globalFeedback: state.globalFeedback,
-        specialDays: state.currentSpecialDays
+        globalFeedback: state.globalFeedback
       });
 
       state.posts[i] = postData.posts;
@@ -827,8 +815,7 @@ async function regenerateBucket(bucketIndex) {
       personas: state.selectedPersonas,
       bucket: state.buckets[bucketIndex],
       globalFeedback: state.globalFeedback,
-      bucketFeedback: feedback,
-      specialDays: state.currentSpecialDays
+      bucketFeedback: feedback
     });
 
     state.posts[bucketIndex] = data.posts;
@@ -876,8 +863,7 @@ async function regeneratePost(bucketIndex, platform, postIndex) {
       platform: platform,
       objective: state.objective,
       currentPost: currentPost,
-      feedback: feedback,
-      specialDays: state.currentSpecialDays
+      feedback: feedback
     });
 
     // Update state
@@ -915,21 +901,19 @@ function goToCalendar() {
 function addCalendarLink() {
   const brandName = document.getElementById("cal-brand-name").value.trim();
   const link = document.getElementById("cal-link").value.trim();
-  const specialDays = document.getElementById("cal-special-days").value.trim();
 
   if (!brandName || !link) {
     alert("Both brand name and link are required.");
     return;
   }
 
-  state.calendarLinks.push({ brandName, link, specialDays });
+  state.calendarLinks.push({ brandName, link });
   saveCalendarLinks();
   renderCalendarList();
 
   // Clear inputs
   document.getElementById("cal-brand-name").value = "";
   document.getElementById("cal-link").value = "";
-  document.getElementById("cal-special-days").value = "";
 }
 
 function renderCalendarList() {
@@ -944,7 +928,6 @@ function renderCalendarList() {
       <div class="calendar-item-info">
         <div class="calendar-item-name">${esc(item.brandName)}</div>
         <a href="${esc(item.link)}" target="_blank" class="calendar-item-link">${esc(item.link)}</a>
-        ${item.specialDays ? `<div class="text-muted mt-1" style="font-size: 0.7rem;"><strong>Special Days:</strong> ${esc(item.specialDays)}</div>` : ''}
       </div>
       <div class="calendar-item-actions">
         <button class="btn btn-ghost btn-sm" onclick="editCalendarLink(${index})">Edit</button>
@@ -966,10 +949,9 @@ function editCalendarLink(index) {
   const item = state.calendarLinks[index];
   const newBrand = prompt("Edit Brand Name:", item.brandName);
   const newLink = prompt("Edit Excel Link:", item.link);
-  const newSpecial = prompt("Edit Special Days:", item.specialDays || "");
 
-  if (newBrand !== null && newLink !== null && newSpecial !== null) {
-    state.calendarLinks[index] = { brandName: newBrand, link: newLink, specialDays: newSpecial };
+  if (newBrand !== null && newLink !== null) {
+    state.calendarLinks[index] = { brandName: newBrand, link: newLink };
     saveCalendarLinks();
     renderCalendarList();
   }
@@ -982,22 +964,44 @@ function saveCalendarLinks() {
 function copyToCalendar() {
   if (!state.buckets || state.buckets.length === 0) return alert("No content generated yet.");
 
+  const startDateStr = prompt("Enter Start Date (YYYY-MM-DD):", new Date().toISOString().split('T')[0]);
+  if (!startDateStr) return;
+
+  const startDate = new Date(startDateStr);
+  if (isNaN(startDate.getTime())) return alert("Invalid date format. Please use YYYY-MM-DD.");
+
   // Prepare a tab-separated string for Excel/Google Sheets
-  let output = "Bucket\tPlatform\tConcept/Idea\tCaption\tVisual Idea\n";
+  // Columns: Day, Date, Bucket/Topic, Format, Concept, Copy, Visual Cue, Reference Link
+  let output = "Day\tDate\tBucket/Topic\tFormat\tConcept\tCopy\tVisual Cue\tReference Link\n";
+
+  let currentDate = new Date(startDate);
+  const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
   state.buckets.forEach((bucket, bIdx) => {
     state.platforms.forEach(platform => {
       const posts = state.posts[bIdx] && state.posts[bIdx][platform];
       if (posts) {
         posts.forEach(post => {
-          output += `${bucket.name}\t${platform}\t${post.idea || post.hook}\t${post.caption}\t${post.visual_cue || post.visual_idea}\n`;
+          const dayName = days[currentDate.getDay()];
+          const dateStr = currentDate.toISOString().split('T')[0];
+          
+          const format = post.format || "Static";
+          const concept = post.idea || post.hook || "";
+          const copy = (post.caption || "").replace(/\n/g, " "); // Replace newlines to keep it in one cell
+          const visual = post.visual_cue || post.visual_idea || "";
+          const ref = post.reference_link || "";
+
+          output += `${dayName}\t${dateStr}\t${bucket.name}\t${format}\t${concept}\t${copy}\t${visual}\t${ref}\n`;
+          
+          // Increment date for the next post
+          currentDate.setDate(currentDate.getDate() + 1);
         });
       }
     });
   });
 
   navigator.clipboard.writeText(output).then(() => {
-    alert("Calendar content copied to clipboard in table format! You can now paste it into your Excel/Google Sheet.");
+    alert("Calendar content copied to clipboard! \n\nColumns: Day, Date, Bucket, Format, Concept, Copy, Visual Cue, Reference Link. \n\nYou can now paste this directly into Excel.");
   }).catch(err => {
     console.error("Copy failed", err);
     alert("Failed to copy. Check console.");
