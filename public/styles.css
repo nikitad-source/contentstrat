@@ -949,3 +949,70 @@ body {
   border-color: var(--accent-1);
 }
 
+
+/* ─── Calendar Repository ─────────────────────────────────────────────────── */
+.calendar-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 2rem;
+}
+
+.calendar-item {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  transition: all var(--transition);
+}
+
+.calendar-item:hover {
+  border-color: var(--border-hover);
+  background: var(--bg-surface-hover);
+}
+
+.calendar-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.calendar-item-name {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.calendar-item-link {
+  font-size: 0.75rem;
+  color: var(--accent-1);
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.calendar-item-link:hover {
+  text-decoration: underline;
+}
+
+.calendar-item-actions {
+  display: flex;
+  gap: 4px;
+}
+
+@media (max-width: 600px) {
+  .calendar-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .calendar-item-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}

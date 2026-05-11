@@ -36,6 +36,10 @@
     <div class="step-item" data-step="4">
       <div class="step-node"><span class="step-num">4</span> Content</div>
     </div>
+    <div class="step-connector"></div>
+    <div class="step-item" data-step="5">
+      <div class="step-node"><span class="step-num">5</span> Calendar</div>
+    </div>
   </nav>
 
   <!-- ═══ STEP 1: Brand Input ═══ -->
@@ -177,9 +181,42 @@
       <div id="buckets-container"></div>
       <div class="action-row">
         <button class="btn btn-secondary" onclick="resetAll()">⟳ Start Over</button>
+        <button class="btn btn-primary" onclick="goToCalendar()">Calendar Plotting 📅</button>
       </div>
     </div>
     <div id="error-4"></div>
+  </section>
+
+  <!-- ═══ STEP 5: Calendar Repository ═══ -->
+  <section id="step-5" class="step-content">
+    <div class="card">
+      <div class="card-title">Brand Calendar Repository</div>
+      <p class="text-muted mb-2" style="font-size: 0.8rem;">Access and manage your brand's content calendar links (Excel sheets).</p>
+      
+      <div class="calendar-list" id="calendar-list">
+        <!-- Calendar items will be rendered here -->
+      </div>
+
+      <div class="mt-2" style="border-top: 1px solid var(--border); padding-top: 1.5rem;">
+        <div class="card-title mb-1" style="font-size: 0.85rem;">Add New Calendar Link</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="cal-brand-name">Brand Name</label>
+            <input class="form-input" type="text" id="cal-brand-name" placeholder="e.g. FreshBrew Coffee" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="cal-link">Excel Sheet Link</label>
+            <input class="form-input" type="text" id="cal-link" placeholder="https://docs.google.com/spreadsheets/..." />
+          </div>
+        </div>
+        <button class="btn btn-primary mt-1" onclick="addCalendarLink()">Add to Repository</button>
+      </div>
+
+      <div class="action-row mt-3">
+        <button class="btn btn-secondary" onclick="goToStep(4)">← Back</button>
+        <button class="btn btn-ghost" onclick="resetAll()">⟳ Start Over</button>
+      </div>
+    </div>
   </section>
 
 </div>
@@ -201,6 +238,7 @@ let state = {
   selectedPersonas: [],
   buckets: [],
   posts: {},  // { bucketIndex: { platform: [posts] } }
+  calendarLinks: JSON.parse(localStorage.getItem('calendarLinks') || '[]'),
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -852,9 +890,81 @@ async function regeneratePost(bucketIndex, platform, postIndex) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// Calendar Repository
+// ═══════════════════════════════════════════════════════════════════════════
+function goToCalendar() {
+  goToStep(5);
+  renderCalendarList();
+}
+
+function addCalendarLink() {
+  const brandName = document.getElementById("cal-brand-name").value.trim();
+  const link = document.getElementById("cal-link").value.trim();
+
+  if (!brandName || !link) {
+    alert("Both brand name and link are required.");
+    return;
+  }
+
+  state.calendarLinks.push({ brandName, link });
+  saveCalendarLinks();
+  renderCalendarList();
+
+  // Clear inputs
+  document.getElementById("cal-brand-name").value = "";
+  document.getElementById("cal-link").value = "";
+}
+
+function renderCalendarList() {
+  const list = document.getElementById("calendar-list");
+  if (state.calendarLinks.length === 0) {
+    list.innerHTML = `<div class="text-muted" style="text-align: center; padding: 2rem;">No calendar links added yet.</div>`;
+    return;
+  }
+
+  list.innerHTML = state.calendarLinks.map((item, index) => `
+    <div class="calendar-item">
+      <div class="calendar-item-info">
+        <div class="calendar-item-name">${esc(item.brandName)}</div>
+        <a href="${esc(item.link)}" target="_blank" class="calendar-item-link">${esc(item.link)}</a>
+      </div>
+      <div class="calendar-item-actions">
+        <button class="btn btn-ghost btn-sm" onclick="editCalendarLink(${index})">Edit</button>
+        <button class="btn btn-ghost btn-sm" style="color: var(--error);" onclick="deleteCalendarLink(${index})">Delete</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+function deleteCalendarLink(index) {
+  if (confirm("Are you sure you want to delete this link?")) {
+    state.calendarLinks.splice(index, 1);
+    saveCalendarLinks();
+    renderCalendarList();
+  }
+}
+
+function editCalendarLink(index) {
+  const item = state.calendarLinks[index];
+  const newBrand = prompt("Edit Brand Name:", item.brandName);
+  const newLink = prompt("Edit Excel Link:", item.link);
+
+  if (newBrand !== null && newLink !== null) {
+    state.calendarLinks[index] = { brandName: newBrand, link: newLink };
+    saveCalendarLinks();
+    renderCalendarList();
+  }
+}
+
+function saveCalendarLinks() {
+  localStorage.setItem('calendarLinks', JSON.stringify(state.calendarLinks));
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // Reset
 // ═══════════════════════════════════════════════════════════════════════════
 function resetAll() {
+  const savedLinks = state.calendarLinks; // Preserve links
   state = {
     brand: "",
     description: "",
@@ -865,6 +975,7 @@ function resetAll() {
     selectedPersonas: [],
     buckets: [],
     posts: {},
+    calendarLinks: savedLinks,
   };
 
   document.getElementById("brand-name").value = "";
@@ -885,6 +996,9 @@ function resetAll() {
   setProgress("progress-research", 0);
   setProgress("progress-content", 0);
 }
+
+// Initial render
+renderCalendarList();
 </script>
 </body>
 </html>
