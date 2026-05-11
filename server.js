@@ -236,7 +236,9 @@ app.post("/api/buckets", async (req, res) => {
   try {
     const { brand, description, platforms, objective, research, personas, globalFeedback, specialDays, bucketCount } = req.body;
     const count = parseInt(bucketCount) || 5;
-    const system = `You are a content strategist. Design content bucket frameworks. Respond ONLY with a valid JSON array of ${count} objects.`;
+    const system = `You are a content strategist. Design content bucket frameworks. 
+    CRITICAL: If special days/holidays are provided, one of the buckets MUST be exactly named "Special Days".
+    Respond ONLY with a valid JSON array of ${count} objects.`;
     
     let user = `Brand: ${brand}\nObjective: ${objective}\nResearch: ${JSON.stringify(research)}\nPersonas: ${JSON.stringify(personas)}\nGlobal Feedback: ${globalFeedback || "None"}\n\nGenerate ${count} buckets: { name, function, purpose, description, content_formats: [], why_for_persona, cta }`;
     

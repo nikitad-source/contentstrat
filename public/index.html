@@ -653,6 +653,12 @@ async function generateContent() {
         `Bucket ${i + 1} of ${state.buckets.length} — generating ${state.platforms.length} platform(s)`
       );
 
+      const isSpecial = bucket.name.toLowerCase().includes("special") || bucket.name.toLowerCase().includes("occasion") || bucket.name.toLowerCase().includes("holiday");
+      const monthsList = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      const dateRegex = new RegExp(`(${monthsList.join('|')})\\s+(\\d+)|(\\d+)\\s+(${monthsList.join('|')})`, "gi");
+      const specialDaysCount = (state.currentSpecialDays.match(dateRegex) || []).length;
+      const pCount = isSpecial ? (specialDaysCount || 1) : Math.ceil(state.totalPosts / state.buckets.length);
+
       const postData = await apiCall("/api/posts", {
         brand: state.brand,
         platforms: state.platforms,
@@ -662,7 +668,7 @@ async function generateContent() {
         bucket: bucket,
         globalFeedback: state.globalFeedback,
         specialDays: state.currentSpecialDays,
-        postCountPerBucket: Math.ceil(state.totalPosts / state.buckets.length)
+        postCountPerBucket: pCount
       });
 
       state.posts[i] = postData.posts;
@@ -1056,24 +1062,34 @@ function copyToCalendar() {
   };
 
   // 1. Identify Special Days Bucket and parse dates
-  const specialBucketIndex = state.buckets.findIndex(b => b.name.toLowerCase().includes("special day") || b.name.toLowerCase().includes("occasion"));
+  const specialBucketIndex = state.buckets.findIndex(b => b.name.toLowerCase().includes("special") || b.name.toLowerCase().includes("occasion") || b.name.toLowerCase().includes("holiday"));
   const specialDatesMap = {}; // { "YYYY-MM-DD": postIndex }
   
   if (specialBucketIndex !== -1 && state.currentSpecialDays) {
     const year = startDate.getFullYear();
-    // Regex for Month Day or Day Month
-    const dateRegex = /(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d+)|(\d+)\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)/gi;
+    const monthsFull = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const monthsShort = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    
+    // Improved regex to catch June, June 05, 5 June, etc.
+    const monthPattern = [...monthsFull, ...monthsShort].join('|');
+    const dateRegex = new RegExp(`(${monthPattern})\\s+(\\d+)|(\\d+)\\s+(${monthPattern})`, "gi");
+    
     let match;
     let specialDayIndex = 0;
     
     while ((match = dateRegex.exec(state.currentSpecialDays)) !== null) {
       const monthStr = match[1] || match[4];
       const dayStr = match[2] || match[3];
-      const monthIdx = months.findIndex(m => monthStr.toLowerCase().startsWith(m.toLowerCase()));
+      
+      // Find month index
+      let monthIdx = monthsFull.findIndex(m => m.toLowerCase() === monthStr.toLowerCase());
+      if (monthIdx === -1) monthIdx = monthsShort.findIndex(m => m.toLowerCase() === monthStr.toLowerCase());
+      
       if (monthIdx !== -1) {
         const d = new Date(year, monthIdx, parseInt(dayStr));
         const key = getLocalDateKey(d);
         specialDatesMap[key] = specialDayIndex++;
+        console.log(`Pinned Special Day: ${monthStr} ${dayStr} -> ${key}`);
       }
     }
   }
