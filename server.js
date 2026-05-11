@@ -267,7 +267,9 @@ app.post("/api/posts", async (req, res) => {
 
     for (const platform of platforms) {
       const formatRules = PLATFORM_FORMAT_RULES[platform] || "";
-      const system = `You are a social media copywriter. Write specific content for humans on ${platform}. Respond ONLY with a JSON array of ${pCount} post objects.`;
+      const system = `You are a social media copywriter. Write specific content for humans on ${platform}. 
+      CRITICAL: If the format is a Carousel, you MUST provide slide-wise details (Slide 1, Slide 2, etc.) inside the 'visual_cue' and 'inner_copy' fields respectively. 
+      Respond ONLY with a JSON array of ${pCount} post objects.`;
       const user = `Brand: ${brand}\nPlatform: ${platform}\nObjective: ${objective}\nBucket: ${bucket.name}\n${formatRules}\nSpecial Days/Holidays for this cycle: ${specialDays || "None"}\n\nGlobal Feedback: ${globalFeedback || "None"}\nBucket Feedback: ${bucketFeedback || "None"}\n\nReturn ${pCount} objects: { format, idea, visual_cue, inner_copy, outer_copy, reference_link }`;
 
       const schema = {
@@ -298,7 +300,9 @@ app.post("/api/posts", async (req, res) => {
 app.post("/api/regenerate-post", async (req, res) => {
   try {
     const { brand, platform, objective, currentPost, feedback } = req.body;
-    const system = `You are an expert copywriter. Rewrite a single post based on feedback. Respond ONLY with a valid JSON object.`;
+    const system = `You are an expert copywriter. Rewrite a single post based on feedback. 
+    CRITICAL: If the format is a Carousel, you MUST provide slide-wise details (Slide 1, Slide 2, etc.) inside the 'visual_cue' and 'inner_copy' fields respectively. 
+    Respond ONLY with a valid JSON object.`;
     const user = `Brand: ${brand}\nPlatform: ${platform}\nDraft: ${JSON.stringify(currentPost)}\nFeedback: ${feedback}\n\nReturn: { format, idea, visual_cue, inner_copy, outer_copy, reference_link }`;
 
     const schema = {

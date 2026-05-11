@@ -197,7 +197,7 @@
       <div id="buckets-container"></div>
       <div class="action-row">
         <button class="btn btn-secondary" onclick="resetAll()">⟳ Start Over</button>
-        <button class="btn btn-secondary" onclick="copyToCalendar()">📋 Copy for Calendar</button>
+        <button class="btn btn-secondary" onclick="copyToCalendar()">📋 Copy For Calendar</button>
         <button class="btn btn-primary" onclick="goToCalendar()">Calendar Plotting 📅</button>
       </div>
       <p class="text-muted mt-1" style="font-size: 0.75rem; text-align: center;">
@@ -1037,12 +1037,14 @@ function copyToCalendar() {
           const dayName = days[currentDate.getDay()];
           const dateStr = currentDate.toISOString().split('T')[0];
           
-          const format = post.format || "Static";
-          const concept = post.idea || "";
-          const innerCopy = (post.inner_copy || "").replace(/\n/g, " ");
-          const outerCopy = (post.outer_copy || "").replace(/\n/g, " ");
-          const visual = post.visual_cue || "";
-          const ref = post.reference_link || "";
+          const clean = (val) => (val || "").toString().replace(/[\n\r\t]/g, " ").trim();
+
+          const format = clean(post.format || "Static");
+          const concept = clean(post.idea);
+          const innerCopy = clean(post.inner_copy);
+          const outerCopy = clean(post.outer_copy);
+          const visual = clean(post.visual_cue);
+          const ref = clean(post.reference_link);
 
           output += `${dayName}\t${dateStr}\t${bucket.name}\t${format}\t${concept}\t${innerCopy}\t${outerCopy}\t${visual}\t${ref}\n`;
           
