@@ -11,7 +11,7 @@ app.use(express.static(path.join(__dirname, "public")));
 
 const PORT = process.env.PORT || 3000;
 const GEMINI_API_KEY = (process.env.GEMINI_API_KEY || "").trim();
-const GEMINI_MODEL = "gemini-3.1-pro-preview"; // Using the latest flagship model found in available models
+const GEMINI_MODEL = "gemini-2.5-pro"; // Updated from 3.1 due to better availability with current key
 
 // ─── Gemini API helper ──────────────────────────────────────────────────────
 async function callGemini(systemPrompt, userPrompt, temperature = 0.7, schema = null) {
