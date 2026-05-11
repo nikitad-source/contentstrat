@@ -90,6 +90,17 @@
         </select>
       </div>
 
+      <div class="form-row mt-1">
+        <div class="form-group">
+          <label class="form-label" for="bucket-count">Number of Buckets</label>
+          <input class="form-input" type="number" id="bucket-count" value="5" min="1" max="10" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="post-count">Total Posts</label>
+          <input class="form-input" type="number" id="post-count" value="25" min="1" max="50" />
+        </div>
+      </div>
+
       <div class="form-group mt-1">
         <label class="form-label" for="special-days">Special Days / Holidays for this month (Optional)</label>
         <textarea class="form-textarea" id="special-days" placeholder="e.g. Independence Day (Aug 15), Product Launch (Aug 20)..." style="min-height: 60px;"></textarea>
@@ -189,6 +200,9 @@
         <button class="btn btn-secondary" onclick="copyToCalendar()">📋 Copy for Calendar</button>
         <button class="btn btn-primary" onclick="goToCalendar()">Calendar Plotting 📅</button>
       </div>
+      <p class="text-muted mt-1" style="font-size: 0.75rem; text-align: center;">
+        Click on Copy For Calendar &rarr; Click on Calendar Plotting &rarr; Find content calendar link &rarr; Paste the content
+      </p>
     </div>
     <div id="error-4"></div>
   </section>
@@ -234,17 +248,12 @@
 const BACKEND = window.location.origin;
 const BUCKET_COLORS = ["#818cf8", "#34d399", "#f59e0b", "#f472b6", "#38bdf8", "#a78bfa", "#fb923c"];
 
-let state = {
-  brand: "",
-  description: "",
-  platforms: [],
-  objective: "",
-  research: null,
-  personas: [],
-  selectedPersonas: [],
   buckets: [],
   posts: {},  // { bucketIndex: { platform: [posts] } }
   calendarLinks: JSON.parse(localStorage.getItem('calendarLinks') || '[]'),
+  currentSpecialDays: "",
+  bucketCount: 5,
+  totalPosts: 25,
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -342,6 +351,8 @@ async function startResearch() {
   state.platforms = platforms;
   state.objective = objective;
   state.currentSpecialDays = document.getElementById("special-days").value.trim();
+  state.bucketCount = parseInt(document.getElementById("bucket-count").value) || 5;
+  state.totalPosts = parseInt(document.getElementById("post-count").value) || 25;
 
   // Move to step 2
   goToStep(2);
@@ -600,7 +611,8 @@ async function generateContent() {
       research: state.research,
       personas: state.selectedPersonas,
       globalFeedback: state.globalFeedback,
-      specialDays: state.currentSpecialDays
+      specialDays: state.currentSpecialDays,
+      bucketCount: state.bucketCount
     });
 
     state.buckets = bucketData.buckets;
@@ -624,7 +636,8 @@ async function generateContent() {
         personas: state.selectedPersonas,
         bucket: bucket,
         globalFeedback: state.globalFeedback,
-        specialDays: state.currentSpecialDays
+        specialDays: state.currentSpecialDays,
+        postCountPerBucket: Math.ceil(state.totalPosts / state.buckets.length)
       });
 
       state.posts[i] = postData.posts;
@@ -664,7 +677,7 @@ function renderResults() {
     <div class="summary-pill">Personas: <strong>${esc(state.selectedPersonas.map(p => p.name).join(", "))}</strong></div>
     <div class="summary-pill">Platforms: <strong>${state.platforms.join(", ")}</strong></div>
     <div class="summary-pill">Buckets: <strong>${state.buckets.length}</strong></div>
-    <div class="summary-pill">Posts: <strong>${state.buckets.length * 5 * state.platforms.length}</strong></div>
+    <div class="summary-pill">Posts: <strong>${state.totalPosts * state.platforms.length}</strong></div>
   `;
 
   // Buckets
@@ -740,14 +753,24 @@ function renderPlatformTabs(bucketIndex, posts) {
           (post, postIdx) => `
         <div class="post-item" id="post-${bucketIndex}-${p}-${postIdx}">
           <div class="post-header">
-            <span class="post-number">Post ${postIdx + 1}</span>
+            <span class="post-number">Post ${postIdx + 1} <span class="badge">${esc(post.format || "Static")}</span></span>
             <button class="copy-btn" onclick="copyPost(${bucketIndex}, '${p}', ${postIdx}, this)">Copy</button>
           </div>
           <div class="post-text">
             <div style="margin-bottom: 0.5rem;"><strong style="color:var(--accent-1);">💡 Idea:</strong> ${esc(post.idea || "")}</div>
-            <div style="margin-bottom: 0.5rem;"><strong style="color:var(--accent-2);">🎨 Visual:</strong> ${esc(post.visual_cue || "")}</div>
-            <div style="margin-bottom: 0.5rem;"><strong style="color:var(--accent-3);">📝 Image Copy:</strong> ${esc(post.inner_copy || "")}</div>
-            <div style="margin-top: 1rem;"><strong style="color:var(--text-main);">💬 Caption:</strong><br/><br/>${esc(post.caption || "")}</div>
+            <div style="margin-bottom: 0.8rem;"><strong style="color:var(--accent-2);">🎨 Visual Cue:</strong> ${esc(post.visual_cue || "")}</div>
+            
+            <div class="copy-section" style="background: rgba(255,255,255,0.03); padding: 0.75rem; border-radius: 8px; margin-bottom: 1rem; border: 1px solid var(--border);">
+              <div style="margin-bottom: 0.5rem;"><strong style="color:var(--accent-3); font-size: 0.75rem; text-transform: uppercase;">📸 Inner Copy (On-Image)</strong><br/>${esc(post.inner_copy || "None")}</div>
+              <div style="margin-top: 0.75rem;"><strong style="color:var(--text-main); font-size: 0.75rem; text-transform: uppercase;">💬 Outer Copy (Caption)</strong><br/><br/>${esc(post.outer_copy || "")}</div>
+            </div>
+
+            ${post.reference_link ? `
+            <div style="margin-top: 0.5rem;">
+              <a href="${esc(post.reference_link)}" target="_blank" class="btn btn-ghost btn-sm" style="font-size: 0.7rem; color: #e60023;">
+                📌 Pinterest Visual Ref
+              </a>
+            </div>` : ''}
           </div>
           <div class="post-feedback-box mt-2" style="display:flex; gap:0.5rem; flex-direction:column;">
             <input type="text" class="form-input form-input-sm" id="feedback-post-${bucketIndex}-${p}-${postIdx}" placeholder="Feedback for this specific post..." />
@@ -792,7 +815,7 @@ function copyPost(bucketIndex, platform, postIndex, btn) {
   if (!posts || !posts[postIndex]) return;
 
   const post = posts[postIndex];
-  const copyText = `💡 Idea:\n${post.idea}\n\n🎨 Visual:\n${post.visual_cue}\n\n📝 Image Copy:\n${post.inner_copy}\n\n💬 Caption:\n${post.caption}`;
+  const copyText = `Format: ${post.format}\n💡 Idea: ${post.idea}\n🎨 Visual: ${post.visual_cue}\n📸 Inner Copy: ${post.inner_copy}\n💬 Outer Copy: ${post.outer_copy}\n📌 Ref: ${post.reference_link}`;
 
   navigator.clipboard.writeText(copyText).then(() => {
     btn.textContent = "Copied!";
@@ -824,7 +847,8 @@ async function regenerateBucket(bucketIndex) {
       bucket: state.buckets[bucketIndex],
       globalFeedback: state.globalFeedback,
       bucketFeedback: feedback,
-      specialDays: state.currentSpecialDays
+      specialDays: state.currentSpecialDays,
+      postCountPerBucket: Math.ceil(state.totalPosts / state.buckets.length)
     });
 
     state.posts[bucketIndex] = data.posts;
@@ -884,9 +908,19 @@ async function regeneratePost(bucketIndex, platform, postIndex) {
     const postText = postEl.querySelector(".post-text");
     postText.innerHTML = `
       <div style="margin-bottom: 0.5rem;"><strong style="color:var(--accent-1);">💡 Idea:</strong> ${esc(data.post.idea || "")}</div>
-      <div style="margin-bottom: 0.5rem;"><strong style="color:var(--accent-2);">🎨 Visual:</strong> ${esc(data.post.visual_cue || "")}</div>
-      <div style="margin-bottom: 0.5rem;"><strong style="color:var(--accent-3);">📝 Image Copy:</strong> ${esc(data.post.inner_copy || "")}</div>
-      <div style="margin-top: 1rem;"><strong style="color:var(--text-main);">💬 Caption:</strong><br/><br/>${esc(data.post.caption || "")}</div>
+      <div style="margin-bottom: 0.8rem;"><strong style="color:var(--accent-2);">🎨 Visual Cue:</strong> ${esc(data.post.visual_cue || "")}</div>
+      
+      <div class="copy-section" style="background: rgba(255,255,255,0.03); padding: 0.75rem; border-radius: 8px; margin-bottom: 1rem; border: 1px solid var(--border);">
+        <div style="margin-bottom: 0.5rem;"><strong style="color:var(--accent-3); font-size: 0.75rem; text-transform: uppercase;">📸 Inner Copy (On-Image)</strong><br/>${esc(data.post.inner_copy || "None")}</div>
+        <div style="margin-top: 0.75rem;"><strong style="color:var(--text-main); font-size: 0.75rem; text-transform: uppercase;">💬 Outer Copy (Caption)</strong><br/><br/>${esc(data.post.outer_copy || "")}</div>
+      </div>
+
+      ${data.post.reference_link ? `
+      <div style="margin-top: 0.5rem;">
+        <a href="${esc(data.post.reference_link)}" target="_blank" class="btn btn-ghost btn-sm" style="font-size: 0.7rem; color: #e60023;">
+          📌 Pinterest Visual Ref
+        </a>
+      </div>` : ''}
     `;
     
     // Clear feedback input
@@ -981,8 +1015,8 @@ function copyToCalendar() {
   if (isNaN(startDate.getTime())) return alert("Invalid date format. Please use YYYY-MM-DD.");
 
   // Prepare a tab-separated string for Excel/Google Sheets
-  // Columns: Day, Date, Bucket/Topic, Format, Concept, Copy, Visual Cue, Reference Link
-  let output = "Day\tDate\tBucket/Topic\tFormat\tConcept\tCopy\tVisual Cue\tReference Link\n";
+  // Columns: Day, Date, Bucket/Topic, Format, Concept, Inner Copy (Image Copy), Outer Copy (Caption), Visual Cue, Reference Links
+  let output = "Day\tDate\tBucket/Topic\tFormat\tConcept\tInner Copy (Image Copy)\tOuter Copy (Caption)\tVisual Cue\tReference Links\n";
 
   let currentDate = new Date(startDate);
   const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -996,12 +1030,13 @@ function copyToCalendar() {
           const dateStr = currentDate.toISOString().split('T')[0];
           
           const format = post.format || "Static";
-          const concept = post.idea || post.hook || "";
-          const copy = (post.caption || "").replace(/\n/g, " "); // Replace newlines to keep it in one cell
-          const visual = post.visual_cue || post.visual_idea || "";
+          const concept = post.idea || "";
+          const innerCopy = (post.inner_copy || "").replace(/\n/g, " ");
+          const outerCopy = (post.outer_copy || "").replace(/\n/g, " ");
+          const visual = post.visual_cue || "";
           const ref = post.reference_link || "";
 
-          output += `${dayName}\t${dateStr}\t${bucket.name}\t${format}\t${concept}\t${copy}\t${visual}\t${ref}\n`;
+          output += `${dayName}\t${dateStr}\t${bucket.name}\t${format}\t${concept}\t${innerCopy}\t${outerCopy}\t${visual}\t${ref}\n`;
           
           // Increment date for the next post
           currentDate.setDate(currentDate.getDate() + 1);
@@ -1011,7 +1046,7 @@ function copyToCalendar() {
   });
 
   navigator.clipboard.writeText(output).then(() => {
-    alert("Calendar content copied to clipboard! \n\nColumns: Day, Date, Bucket, Format, Concept, Copy, Visual Cue, Reference Link. \n\nYou can now paste this directly into Excel.");
+    alert("Calendar content copied to clipboard! \n\nColumns: Day, Date, Bucket, Format, Concept, Inner Copy, Outer Copy, Visual Cue, Reference Links. \n\nYou can now paste this directly into Excel.");
   }).catch(err => {
     console.error("Copy failed", err);
     alert("Failed to copy. Check console.");
